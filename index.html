@@ -136,6 +136,19 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--muted)
 .mrating { display: inline-block; font-size: 12px; padding: 4px 14px; border-radius: 20px; font-weight: 500; margin-bottom: 10px; }
 .mrating.buy { background: rgba(62,207,142,0.15); color: #3ecf8e; }
 .msrc { font-size: 10px; color: var(--muted); margin-top: 14px; padding-top: 10px; border-top: 0.5px solid rgba(255,255,255,0.06); }
+
+/* ── PER·EPS 비교 차트 ── */
+.seg-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.seg-group { display: flex; gap: 4px; background: rgba(255,255,255,0.06); border-radius: 8px; padding: 3px; }
+.seg-btn2 { font-size: 12px; padding: 5px 13px; border-radius: 6px; border: none; background: transparent; color: var(--muted); cursor: pointer; transition: all .15s; }
+.seg-btn2.active { background: var(--surface); color: var(--text); border: 0.5px solid rgba(255,255,255,0.15); font-weight: 500; }
+.per-view { display: none; }
+.per-view.active { display: block; }
+.ins-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 8px; margin-bottom: 14px; }
+.ins-c { background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px 12px; }
+.ins-lbl { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+.ins-v { font-size: 15px; font-weight: 500; }
+.ins-s { font-size: 10px; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -260,6 +273,79 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--muted)
   <div class="chart-grid-3" id="priceCards"></div>
 
   <!-- 인사이트 -->
+
+  <!-- ⑧ PER·EPS 비교 차트 -->
+  <div class="section-label">PER · EPS 비교 분석</div>
+
+  <div class="seg-row">
+    <div class="seg-group">
+      <button class="seg-btn2 active" onclick="perSetMode('current',this)">현재 (2025A)</button>
+      <button class="seg-btn2" onclick="perSetMode('trend',this)">연도별 트렌드</button>
+      <button class="seg-btn2" onclick="perSetMode('bubble',this)">버블 비교</button>
+    </div>
+    <div class="legend">
+      <span class="leg"><span class="leg-sq" style="background:#4c9eff"></span>삼성전자</span>
+      <span class="leg"><span class="leg-sq" style="background:#ff6b6b"></span>SK하이닉스</span>
+      <span class="leg"><span class="leg-sq" style="background:#3ecf8e"></span>Micron</span>
+      <span class="leg"><span class="leg-sq" style="background:#a78bfa"></span>Shin-Etsu</span>
+      <span class="leg"><span class="leg-sq" style="background:#f5a623"></span>SUMCO</span>
+    </div>
+  </div>
+
+  <!-- 뷰 1: 현재 -->
+  <div class="per-view active" id="pv-current">
+    <div class="ins-row">
+      <div class="ins-c"><div class="ins-lbl">최저 PER (저평가)</div><div class="ins-v" style="color:#3ecf8e">Micron 14x</div><div class="ins-s neu">AI 성장 대비 할인</div></div>
+      <div class="ins-c"><div class="ins-lbl">최고 EPS 성장</div><div class="ins-v" style="color:#ff6b6b">SK하이닉스</div><div class="ins-s up">₩58,955 (+290%)</div></div>
+      <div class="ins-c"><div class="ins-lbl">업종 평균 PER</div><div class="ins-v">27.0x</div><div class="ins-s neu">KRX 반도체 기준</div></div>
+      <div class="ins-c"><div class="ins-lbl">Micron EPS (FQ1'26)</div><div class="ins-v" style="color:#3ecf8e">$4.60</div><div class="ins-s up">분기 역대 최고</div></div>
+    </div>
+    <div class="chart-grid-2">
+      <div class="card">
+        <div class="card-title">PER 비교 (2025A) — 낮을수록 저평가</div>
+        <div style="position:relative;height:220px;"><canvas id="perBarChart" role="img" aria-label="회사별 PER 비교. Micron 14x, Shin-Etsu 18x, SK하이닉스 20.7x, SUMCO 22x, 삼성전자 34.4x">PER: 삼성 34.4x, SK하이닉스 20.7x, Micron 14x, Shin-Etsu 18x, SUMCO 22x</canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">EPS 비교 (2025A, USD 환산)</div>
+        <div style="position:relative;height:220px;"><canvas id="epsBarChart" role="img" aria-label="회사별 EPS 비교 USD 환산. SK하이닉스 42.1달러, Micron 7.59달러, 삼성전자 4.72달러">EPS USD: 삼성 $4.72, SK하이닉스 $42.1, Micron $7.59, Shin-Etsu $6.2, SUMCO $2.1</canvas></div>
+      </div>
+    </div>
+    <div class="insight" style="margin-top:10px;">
+      <b>투자 해석:</b> Micron(14x)·SK하이닉스(20.7x)는 업종 평균(27x) 대비 저평가 — AI 실적 급성장 대비 할인 상태. 삼성전자(34.4x)는 반도체+가전 복합 사업 프리미엄. EPS 기준 SK하이닉스($42.1 환산)의 실적 폭발적 성장이 가장 두드러집니다.
+    </div>
+  </div>
+
+  <!-- 뷰 2: 연도별 트렌드 -->
+  <div class="per-view" id="pv-trend">
+    <div class="chart-grid-2" style="grid-template-columns:1fr;">
+      <div class="card">
+        <div class="card-title">PER 연도별 트렌드 (2022~2026E) — 점선=예측</div>
+        <div style="position:relative;height:260px;"><canvas id="perTrendChart" role="img" aria-label="회사별 PER 연도별 추이 2022년부터 2026년 예상치까지">PER 트렌드: 삼성전자, SK하이닉스, Micron, Shin-Etsu, SUMCO</canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">EPS 성장 트렌드 (삼성·SK하이닉스 만원, Micron USD — 우축)</div>
+        <div style="position:relative;height:260px;"><canvas id="epsTrendChart" role="img" aria-label="회사별 EPS 연도별 추이">EPS 연도별 추이</canvas></div>
+      </div>
+    </div>
+    <div class="insight" style="margin-top:10px;">
+      <b>트렌드 해석:</b> SK하이닉스·Micron은 2023년 적자(N/A) 후 급격히 회복. Micron PER은 2025년 14x → 2026E 9.5x로 추가 압축 예상(EPS 급증). 삼성전자 PER은 2025년 영업이익 감소로 일시 상승 후 2026E 회복 전망.
+    </div>
+  </div>
+
+  <!-- 뷰 3: 버블 비교 -->
+  <div class="per-view" id="pv-bubble">
+    <div class="card" style="margin-bottom:10px;">
+      <div class="card-title">PER vs EPS 성장률 버블차트 — 버블 크기: 시가총액 규모 / 좌상단이 이상적 포지션</div>
+      <div style="position:relative;height:340px;"><canvas id="perBubbleChart" role="img" aria-label="PER 대비 EPS 성장률 버블차트. X축 PER, Y축 EPS 성장률, 버블크기 시가총액">버블: X=PER, Y=EPS성장률%, 크기=시총</canvas></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px;padding:0 4px;">
+        <span>← 저평가 (낮은 PER)</span><span>고평가 (높은 PER) →</span>
+      </div>
+    </div>
+    <div class="insight">
+      <b>버블차트 해석 (좌상단 = 이상적):</b> <b>Micron</b> PER 14x·EPS 성장 +483%로 가장 매력적 위치. <b>SK하이닉스</b> EPS 성장 +290%·PER 20.7x로 두 번째. <b>삼성전자</b>는 PER 34.4x로 상대적 고평가. 웨이퍼주(Shin-Etsu·SUMCO)는 안정적 중간 포지션.
+    </div>
+  </div>
+
   <div class="insight" style="margin-top:16px;">
     <b>투자 인사이트 (2026 Q2 기준):</b>
     AI 서버 수요 폭증 → HBM 전환 생산 → 범용 DRAM·NAND 구조적 공급 부족.
@@ -889,6 +975,161 @@ function handleOverlayClick(e) {
 }
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+
+/* ── PER·EPS 비교 차트 ─────────────────────────────────── */
+function perSetMode(mode, btn) {
+  document.querySelectorAll('.seg-btn2').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.per-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('pv-' + mode).classList.add('active');
+}
+
+(function() {
+  const PC = { sam:'#4c9eff', hynix:'#ff6b6b', micron:'#3ecf8e', shin:'#a78bfa', sumco:'#f5a623', avg:'#8b90a0' };
+  const gridC = 'rgba(255,255,255,0.06)';
+  const lblC  = '#8b90a0';
+  const baseP = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} } };
+
+  /* PER 막대 */
+  new Chart(document.getElementById('perBarChart'), {
+    type:'bar',
+    data:{
+      labels:['삼성전자','SK하이닉스','Micron','Shin-Etsu','SUMCO'],
+      datasets:[
+        { label:'PER', data:[34.4,20.7,14.0,18.0,22.0],
+          backgroundColor:[PC.sam,PC.hynix,PC.micron,PC.shin,PC.sumco],
+          borderRadius:4, borderSkipped:false },
+        { label:'업종평균(27x)', data:[27,27,27,27,27], type:'line',
+          borderColor:PC.avg, borderDash:[5,4], borderWidth:1.5, pointRadius:0, fill:false }
+      ]
+    },
+    options:{
+      ...baseP,
+      scales:{
+        x:{ticks:{color:lblC,font:{size:10}},grid:{display:false}},
+        y:{ticks:{color:lblC,callback:v=>v+'x'},grid:{color:gridC},min:0,max:42}
+      },
+      plugins:{ legend:{display:false},
+        tooltip:{callbacks:{label:c=>c.datasetIndex===0?`PER: ${c.raw}x`:`업종 평균: ${c.raw}x`}} }
+    }
+  });
+
+  /* EPS 막대 (USD 환산 1400원, 155엔) */
+  const epsItems = [
+    {name:'삼성전자', raw:'₩6,603', usd:+(6603/1400).toFixed(2), color:PC.sam},
+    {name:'SK하이닉스',raw:'₩58,955',usd:+(58955/1400).toFixed(2),color:PC.hynix},
+    {name:'Micron',   raw:'$7.59',  usd:7.59,                     color:PC.micron},
+    {name:'Shin-Etsu',raw:'¥960E',  usd:+(960/155).toFixed(2),    color:PC.shin},
+    {name:'SUMCO',    raw:'¥325E',  usd:+(325/155).toFixed(2),    color:PC.sumco},
+  ];
+  new Chart(document.getElementById('epsBarChart'), {
+    type:'bar',
+    data:{
+      labels:epsItems.map(d=>d.name),
+      datasets:[{ label:'EPS(USD)', data:epsItems.map(d=>d.usd),
+        backgroundColor:epsItems.map(d=>d.color), borderRadius:4, borderSkipped:false }]
+    },
+    options:{
+      ...baseP,
+      scales:{
+        x:{ticks:{color:lblC,font:{size:10}},grid:{display:false}},
+        y:{ticks:{color:lblC,callback:v=>'$'+v},grid:{color:gridC},min:0}
+      },
+      plugins:{ legend:{display:false},
+        tooltip:{callbacks:{label:c=>{
+          const d=epsItems[c.dataIndex];
+          return [`USD 환산: $${d.usd}`,`원래 단위: ${d.raw}`];
+        }}}
+      }
+    }
+  });
+
+  /* PER 트렌드 */
+  const yrs = ['2022A','2023A','2024A','2025A','2026E'];
+  const perTD = [
+    {label:'삼성전자',  data:[10.2,38.5,18.3,34.4,16.0], color:PC.sam,   dash:[]},
+    {label:'SK하이닉스',data:[5.8, null,12.1,20.7,11.5], color:PC.hynix, dash:[5,3]},
+    {label:'Micron',   data:[7.1, null,35.2,14.0, 9.5], color:PC.micron,dash:[2,2]},
+    {label:'Shin-Etsu',data:[20.0,18.5,17.0,18.0,16.5], color:PC.shin,  dash:[4,3]},
+    {label:'SUMCO',    data:[18.0,22.0,20.0,22.0,18.0], color:PC.sumco, dash:[3,4]},
+  ];
+  new Chart(document.getElementById('perTrendChart'), {
+    type:'line',
+    data:{ labels:yrs, datasets:perTD.map(d=>({
+      label:d.label, data:d.data, borderColor:d.color, backgroundColor:'transparent',
+      borderWidth:2, pointRadius:4, pointBackgroundColor:d.color,
+      tension:0.3, spanGaps:true, borderDash:d.dash
+    }))},
+    options:{
+      ...baseP,
+      scales:{
+        x:{ticks:{color:lblC},grid:{display:false}},
+        y:{ticks:{color:lblC,callback:v=>v+'x'},grid:{color:gridC},min:0,max:50}
+      },
+      plugins:{ legend:{display:false},
+        tooltip:{mode:'index',intersect:false,
+          callbacks:{label:c=>c.raw!=null?`${c.dataset.label}: ${c.raw}x`:`${c.dataset.label}: N/A (적자)`}}
+      }
+    }
+  });
+
+  /* EPS 트렌드 */
+  const epsTD = [
+    {label:'삼성전자(천원)', data:[7.0,1.2,4.8,6.6,9.2],   color:PC.sam,   dash:[],    ax:'y'},
+    {label:'SK하이닉스(만원)',data:[9.7,null,3.1,5.9,9.0],  color:PC.hynix, dash:[5,3], ax:'y'},
+    {label:'Micron($)',    data:[7.2,-5.4,1.3,7.6,11.0],  color:PC.micron,dash:[2,2], ax:'y2'},
+  ];
+  new Chart(document.getElementById('epsTrendChart'), {
+    type:'line',
+    data:{ labels:yrs, datasets:epsTD.map(d=>({
+      label:d.label, data:d.data, borderColor:d.color, backgroundColor:'transparent',
+      borderWidth:2, pointRadius:4, pointBackgroundColor:d.color,
+      tension:0.3, spanGaps:false, borderDash:d.dash, yAxisID:d.ax
+    }))},
+    options:{
+      ...baseP,
+      scales:{
+        x:{ticks:{color:lblC},grid:{display:false}},
+        y:{position:'left', ticks:{color:lblC,callback:v=>v+'만원'}, grid:{color:gridC}},
+        y2:{position:'right',ticks:{color:PC.micron,callback:v=>'$'+v},grid:{display:false}}
+      },
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}}
+    }
+  });
+
+  /* 버블 차트 */
+  const bubbles = [
+    {label:'삼성전자',   x:34.4, y:37,  r:28, color:PC.sam},
+    {label:'SK하이닉스', x:20.7, y:290, r:20, color:PC.hynix},
+    {label:'Micron',    x:14.0, y:483, r:16, color:PC.micron},
+    {label:'Shin-Etsu', x:18.0, y:85,  r:11, color:PC.shin},
+    {label:'SUMCO',     x:22.0, y:60,  r:8,  color:PC.sumco},
+  ];
+  new Chart(document.getElementById('perBubbleChart'), {
+    type:'bubble',
+    data:{ datasets:bubbles.map(d=>({
+      label:d.label, data:[{x:d.x,y:d.y,r:d.r}],
+      backgroundColor:d.color+'BB', borderColor:d.color, borderWidth:1.5
+    }))},
+    options:{
+      ...baseP,
+      layout:{padding:{top:24,right:24,bottom:8,left:8}},
+      scales:{
+        x:{title:{display:true,text:'PER (배)',color:lblC,font:{size:11}},
+           ticks:{color:lblC,callback:v=>v+'x'},grid:{color:gridC},min:5,max:45},
+        y:{title:{display:true,text:'EPS 성장률 (%)',color:lblC,font:{size:11}},
+           ticks:{color:lblC,callback:v=>v+'%'},grid:{color:gridC},min:-50,max:570}
+      },
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>{
+          const d=bubbles[c.datasetIndex];
+          return [`${d.label}`,`PER: ${d.x}x`,`EPS 성장률: +${d.y}%`];
+        }}}
+      }
+    }
+  });
+})();
 
 init().catch(console.error);
 </script>
