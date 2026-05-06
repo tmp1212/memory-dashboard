@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>메모리 반도체 투자 대시보드</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg:       #0f1117;
+  --surface:  #1a1d27;
+  --card:     #21253a;
+  --border:   rgba(255,255,255,0.08);
+  --text:     #e8eaf0;
+  --muted:    #8b90a0;
+  --blue:     #4c9eff;
+  --green:    #3ecf8e;
+  --red:      #ff6b6b;
+  --amber:    #f5a623;
+  --purple:   #a78bfa;
+  --teal:     #2dd4bf;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+header { padding: 20px 24px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+.logo { font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
+.logo span { color: var(--blue); }
+#updateBadge { font-size: 11px; color: var(--muted); background: var(--surface); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); }
+
+.wrap { padding: 20px 24px; max-width: 1280px; margin: 0 auto; }
+.section-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; margin-top: 24px; }
+
+/* Metric cards */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.kpi { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.kpi-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.kpi-value { font-size: 22px; font-weight: 600; }
+.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.up   { color: var(--green); }
+.down { color: var(--red); }
+.neu  { color: var(--blue); }
+
+/* Stock row */
+.stock-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stock { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stock-name { font-size: 12px; color: var(--muted); }
+.stock-price { font-size: 18px; font-weight: 600; margin: 4px 0; }
+.stock-chg { font-size: 12px; font-weight: 500; }
+.stock-ticker { font-size: 10px; color: var(--muted); }
+.badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 12px; font-weight: 500; }
+.badge.up   { background: rgba(62,207,142,0.15); color: var(--green); }
+.badge.down { background: rgba(255,107,107,0.15); color: var(--red); }
+.badge.neu  { background: rgba(76,158,255,0.12); color: var(--blue); }
+
+/* Chart grid */
+.chart-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.chart-grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+@media(max-width:768px){ .chart-grid-2,.chart-grid-3 { grid-template-columns:1fr; } }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.card.full { grid-column: 1/-1; }
+.card-title { font-size: 12px; font-weight: 600; margin-bottom: 12px; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--muted); }
+.leg-sq { width: 9px; height: 9px; border-radius: 2px; flex-shrink:0; }
+
+/* Tab buttons */
+.tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.tab { font-size: 11px; padding: 3px 10px; border-radius: 16px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
+.tab.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+/* Price bars */
+.pbar-wrap { display: flex; flex-direction: column; gap: 8px; }
+.pbar-row { }
+.pbar-header { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.pbar-bg { background: rgba(255,255,255,0.07); border-radius: 3px; height: 6px; overflow: hidden; }
+.pbar-fill { height: 100%; border-radius: 3px; }
+
+/* Insight */
+.insight { background: rgba(76,158,255,0.07); border: 1px solid rgba(76,158,255,0.2); border-radius: 10px; padding: 12px 16px; font-size: 12px; color: var(--muted); line-height: 1.7; margin-top: 8px; }
+.insight b { color: var(--text); font-weight: 600; }
+
+/* FX bar */
+.fx-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.fx-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 13px; }
+.fx-label { font-size: 10px; color: var(--muted); }
+.fx-val { font-weight: 600; font-size: 16px; }
+
+footer { text-align: center; padding: 24px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 32px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🧠 <span>메모리 반도체</span> 투자 대시보드</div>
+  <div id="updateBadge">데이터 로딩 중...</div>
+</header>
+
+<div class="wrap">
+
+  <!-- ① 주요 지표 KPI -->
+  <div class="section-label">주요 시장 지표</div>
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">시장 규모 (2024 실적)</div>
+      <div class="kpi-value">$163B</div>
+      <div class="kpi-sub up">▲ +76.8% YoY</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">시장 규모 (2025E)</div>
+      <div class="kpi-value">$204B</div>
+      <div class="kpi-sub up">▲ +25.2% YoY</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">DRAM 계약가 (Q1'26)</div>
+      <div class="kpi-value">+55~60%</div>
+      <div class="kpi-sub up">▲ 분기 대비 상승</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">NAND 계약가 (Q1'26)</div>
+      <div class="kpi-value">+33~38%</div>
+      <div class="kpi-sub up">▲ 분기 대비 상승</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">웨이퍼 출하량 (2025)</div>
+      <div class="kpi-value">12,973 MSI</div>
+      <div class="kpi-sub up">▲ +5.8% YoY</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">HBM 시장 점유율</div>
+      <div class="kpi-value">SK Hynix 70%</div>
+      <div class="kpi-sub neu">2025 Q1 기준</div>
+    </div>
+  </div>
+
+  <!-- ② 관련주 실시간 주가 (자동) -->
+  <div class="section-label">관련주 주가 <span style="color:var(--blue);font-size:9px;margin-left:6px">● 매일 자동 갱신</span></div>
+  <div class="fx-row" style="margin-bottom:10px;">
+    <div class="fx-item"><div class="fx-label">USD/KRW</div><div class="fx-val" id="fx-krw">—</div></div>
+    <div class="fx-item"><div class="fx-label">USD/JPY</div><div class="fx-val" id="fx-jpy">—</div></div>
+  </div>
+  <div class="stock-row" id="stockRow">
+    <!-- JS로 채움 -->
+  </div>
+
+  <!-- ③ 시장 규모 & 국가별 점유율 -->
+  <div class="section-label">글로벌 시장 규모 & 점유율</div>
+  <div class="chart-grid-2">
+    <div class="card">
+      <div class="card-title">글로벌 메모리 시장 규모 ($B, 2020–2028E)</div>
+      <div style="position:relative;height:220px;"><canvas id="mktChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">국가별 생산 점유율 (2024)</div>
+      <div style="position:relative;height:220px;"><canvas id="countryChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ④ DRAM / NAND 점유율 -->
+  <div class="section-label">제조사별 점유율 변화</div>
+  <div class="chart-grid-2">
+    <div class="card">
+      <div class="card-title">DRAM 점유율</div>
+      <div class="tabs" id="dramTabs"></div>
+      <div style="position:relative;height:180px;"><canvas id="dramDonut"></canvas></div>
+      <div class="legend" id="dramLeg" style="margin-top:8px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">NAND 점유율</div>
+      <div class="tabs" id="nandTabs"></div>
+      <div style="position:relative;height:180px;"><canvas id="nandDonut"></canvas></div>
+      <div class="legend" id="nandLeg" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <!-- ⑤ DRAM 분기별 트렌드 -->
+  <div class="section-label">DRAM 점유율 분기 트렌드</div>
+  <div class="chart-grid-2" style="grid-template-columns:1fr;">
+    <div class="card">
+      <div class="card-title">DRAM 제조사별 분기 점유율 (2022Q1–2025Q3)</div>
+      <div class="legend">
+        <span class="leg"><span class="leg-sq" style="background:#4c9eff"></span>Samsung</span>
+        <span class="leg"><span class="leg-sq" style="background:#3ecf8e"></span>SK Hynix</span>
+        <span class="leg"><span class="leg-sq" style="background:#ff6b6b"></span>Micron</span>
+        <span class="leg"><span class="leg-sq" style="background:#8b90a0"></span>기타</span>
+      </div>
+      <div style="position:relative;height:220px;"><canvas id="trendChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ⑥ 웨이퍼 출하량 -->
+  <div class="section-label">웨이퍼 출하량 (SEMI 공식)</div>
+  <div class="chart-grid-2">
+    <div class="card">
+      <div class="card-title">연간 출하량 (MSI, 2020–2028E)</div>
+      <div style="position:relative;height:220px;"><canvas id="waferAnnual"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">분기별 출하량 + YoY 증감 (2023Q1–2026Q1)</div>
+      <div class="legend">
+        <span class="leg"><span class="leg-sq" style="background:#4c9eff"></span>출하량(MSI)</span>
+        <span class="leg"><span class="leg-sq" style="background:#f5a623"></span>YoY(%)</span>
+      </div>
+      <div style="position:relative;height:220px;"><canvas id="waferQtr"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ⑦ 가격 트렌드 -->
+  <div class="section-label">메모리 제품별 가격 변동 (최근 1년)</div>
+  <div class="chart-grid-3" id="priceCards"></div>
+
+  <!-- 인사이트 -->
+  <div class="insight" style="margin-top:16px;">
+    <b>투자 인사이트 (2026 Q2 기준):</b>
+    AI 서버 수요 폭증 → HBM 전환 생산 → 범용 DRAM·NAND 구조적 공급 부족.
+    <b>SK Hynix</b>는 HBM 70% 점유로 최대 수혜.
+    <b>삼성</b>은 DRAM 점유율 하락 후 반등 중(Q3'25 33%).
+    <b>Micron</b>은 AI 고객 확대로 점유율 22%→26% 성장.
+    DDR5 수익성이 2026년 HBM3e 추월 전망(TrendForce).
+    웨이퍼 제조사(Shin-Etsu, SUMCO)도 AI 수요 직접 수혜권.
+  </div>
+
+</div>
+
+<footer>
+  데이터 출처: SEMI, TrendForce, Statista, Counterpoint Research, Sourceability · 주가/환율: Yahoo Finance (자동)<br>
+  시장 점유율·가격은 수동 업데이트 (분기 1회) · 투자 참고용 정보로, 투자 결정은 본인 판단 하에 진행하세요.
+</footer>
+
+<script>
+/* ── 차트 공통 색 ─────────────────────────────────────── */
+const gc = { gridColor:'rgba(255,255,255,0.06)', labelColor:'#8b90a0' };
+
+/* ── 데이터 로드 ─────────────────────────────────────── */
+async function loadJSON(path) {
+  const r = await fetch(path + '?t=' + Date.now());
+  return r.json();
+}
+
+async function init() {
+  const [auto, manual] = await Promise.all([
+    loadJSON('data/auto.json'),
+    loadJSON('data/manual.json'),
+  ]);
+  renderBadge(auto._updated);
+  renderFX(auto.fx);
+  renderStocks(auto.stocks);
+  renderMarketSize(manual.market_size);
+  renderCountry();
+  renderDonut('dram', manual.dram_share, 'dramTabs','dramDonut','dramLeg');
+  renderDonut('nand', manual.nand_share, 'nandTabs','nandDonut','nandLeg');
+  renderTrend(manual.dram_trend_quarterly);
+  renderWaferAnnual(manual.wafer_shipment);
+  renderWaferQtr(manual.wafer_shipment);
+  renderPriceCards(manual.price_trends);
+}
+
+/* ── 업데이트 배지 ──────────────────────────────────── */
+function renderBadge(ts) {
+  const d = new Date(ts);
+  const kst = new Date(d.getTime() + 9*3600*1000);
+  const s = kst.toISOString().replace('T',' ').substring(0,16) + ' KST';
+  document.getElementById('updateBadge').textContent = '주가 기준: ' + s;
+}
+
+/* ── 환율 ────────────────────────────────────────────── */
+function renderFX(fx) {
+  document.getElementById('fx-krw').textContent = fx.USDKRW ? fx.USDKRW.toLocaleString() + ' ₩' : '—';
+  document.getElementById('fx-jpy').textContent = fx.USDJPY ? fx.USDJPY.toFixed(1) + ' ¥' : '—';
+}
+
+/* ── 주가 카드 ───────────────────────────────────────── */
+function renderStocks(stocks) {
+  const row = document.getElementById('stockRow');
+  row.innerHTML = '';
+  for (const [ticker, d] of Object.entries(stocks)) {
+    const chgClass = d.change === null ? 'neu' : d.change >= 0 ? 'up' : 'down';
+    const chgSign  = d.change === null ? '—' : (d.change >= 0 ? '+' : '') + d.change.toFixed(2) + '%';
+    const priceStr = d.price !== null
+      ? d.price.toLocaleString() + (d.currency === 'KRW' ? ' ₩' : d.currency === 'JPY' ? ' ¥' : ' $')
+      : '—';
+    row.innerHTML += `
+      <div class="stock">
+        <div class="stock-name">${d.name}</div>
+        <div class="stock-price">${priceStr}</div>
+        <div><span class="badge ${chgClass}">${chgSign}</span></div>
+        <div class="stock-ticker" style="margin-top:4px">${ticker}</div>
+      </div>`;
+  }
+}
+
+/* ── 시장 규모 차트 ──────────────────────────────────── */
+function renderMarketSize(ms) {
+  const labels = ms.data.map(d => d.year);
+  const values = ms.data.map(d => d.value);
+  const colors = ms.data.map(d => d.type === 'actual' ? '#4c9eff' : 'rgba(76,158,255,0.35)');
+  new Chart(document.getElementById('mktChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderRadius: 4, borderSkipped: false }] },
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => `$${c.raw}B` }}},
+      scales:{
+        x:{ ticks:{color:gc.labelColor}, grid:{display:false} },
+        y:{ ticks:{color:gc.labelColor, callback:v=>`$${v}B`}, grid:{color:gc.gridColor}, beginAtZero:true }
+      }
+    }
+  });
+}
+
+/* ── 국가별 점유율 ────────────────────────────────────── */
+function renderCountry() {
+  new Chart(document.getElementById('countryChart'), {
+    type:'bar',
+    data:{
+      labels:['한국 (삼성+SK Hynix)','미국 (Micron)','일본 (Kioxia)','중국 (CXMT)','기타'],
+      datasets:[{ data:[70,20,5,3,2],
+        backgroundColor:['#4c9eff','#ff6b6b','#f5a623','#a78bfa','#8b90a0'],
+        borderRadius:4, borderSkipped:false }]
+    },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`${c.raw}%`}}},
+      scales:{
+        x:{ ticks:{color:gc.labelColor, callback:v=>`${v}%`}, grid:{color:gc.gridColor}, max:80 },
+        y:{ ticks:{color:gc.labelColor, font:{size:11}}, grid:{display:false} }
+      }
+    }
+  });
+}
+
+/* ── 도넛 차트 (DRAM / NAND) ─────────────────────────── */
+const donutCharts = {};
+function renderDonut(type, shareData, tabsId, canvasId, legId) {
+  const years = Object.keys(shareData.years).sort();
+  const tabsEl = document.getElementById(tabsId);
+  tabsEl.innerHTML = years.map((y,i)=>
+    `<button class="tab ${i===years.length-1?'active':''}" onclick="switchDonut('${type}','${y}',this)">${y}</button>`
+  ).join('');
+  const latest = years[years.length-1];
+  const d = shareData.years[latest];
+  donutCharts[type] = new Chart(document.getElementById(canvasId), {
+    type:'doughnut',
+    data:{ labels:d.map(x=>x.name), datasets:[{ data:d.map(x=>x.value),
+      backgroundColor:d.map(x=>x.color), borderWidth:2, borderColor:'#21253a' }]},
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}%`}}}
+    }
+  });
+  updateDonutLegend(legId, d);
+  window['_donutData_'+type] = shareData;
+}
+
+function switchDonut(type, year, btn) {
+  btn.closest('.tabs').querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const shareData = window['_donutData_'+type];
+  const d = shareData.years[year];
+  const chart = donutCharts[type];
+  chart.data.labels = d.map(x=>x.name);
+  chart.data.datasets[0].data = d.map(x=>x.value);
+  chart.data.datasets[0].backgroundColor = d.map(x=>x.color);
+  chart.update();
+  updateDonutLegend(type==='dram'?'dramLeg':'nandLeg', d);
+}
+
+function updateDonutLegend(legId, d) {
+  document.getElementById(legId).innerHTML = d.map(x=>
+    `<span class="leg"><span class="leg-sq" style="background:${x.color}"></span>${x.name} ${x.value}%</span>`
+  ).join('');
+}
+
+/* ── DRAM 트렌드 라인 ────────────────────────────────── */
+function renderTrend(td) {
+  const colors = { 'Samsung':'#4c9eff','SK Hynix':'#3ecf8e','Micron':'#ff6b6b','기타':'#8b90a0' };
+  const dashes = { 'Samsung':[],'SK Hynix':[5,3],'Micron':[2,2],'기타':[3,5] };
+  const datasets = Object.entries(td.series).map(([name,vals])=>({
+    label:name, data:vals, borderColor:colors[name], borderWidth:2,
+    backgroundColor:'transparent', tension:0.4, pointRadius:3,
+    pointBackgroundColor:colors[name], fill:false, borderDash:dashes[name]||[]
+  }));
+  new Chart(document.getElementById('trendChart'), {
+    type:'line', data:{ labels:td.labels, datasets },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{mode:'index',intersect:false}},
+      scales:{
+        x:{ticks:{color:gc.labelColor,font:{size:10},autoSkip:false,maxRotation:45},grid:{color:gc.gridColor}},
+        y:{ticks:{color:gc.labelColor,callback:v=>`${v}%`},grid:{color:gc.gridColor},min:0,max:55}
+      }
+    }
+  });
+}
+
+/* ── 웨이퍼 연간 차트 ────────────────────────────────── */
+function renderWaferAnnual(ws) {
+  const labels = ws.annual.map(d=>d.year);
+  const values = ws.annual.map(d=>d.value);
+  const colors = ws.annual.map(d=> d.type==='actual' ? (d.value===14565?'#3ecf8e':'#4c9eff') : 'rgba(76,158,255,0.3)');
+  new Chart(document.getElementById('waferAnnual'),{
+    type:'bar', data:{labels, datasets:[{data:values,backgroundColor:colors,borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw.toLocaleString()} MSI`}}},
+      scales:{
+        x:{ticks:{color:gc.labelColor,autoSkip:false},grid:{display:false}},
+        y:{ticks:{color:gc.labelColor,callback:v=>`${(v/1000).toFixed(0)}k`},grid:{color:gc.gridColor},min:10000,max:16500}
+      }
+    }
+  });
+}
+
+/* ── 웨이퍼 분기 차트 ────────────────────────────────── */
+function renderWaferQtr(ws) {
+  const labels = ws.quarterly.map(d=>d.q);
+  const values = ws.quarterly.map(d=>d.value);
+  const yoyArr = values.map((v,i)=>{
+    const prevIdx = i - 4;
+    if(prevIdx < 0) return null;
+    return Math.round((v - values[prevIdx]) / values[prevIdx] * 100 * 10) / 10;
+  });
+  new Chart(document.getElementById('waferQtr'),{
+    type:'bar',
+    data:{labels, datasets:[
+      {type:'bar', label:'출하량(MSI)', data:values,
+        backgroundColor: values.map((_,i)=> i>=8?'#4c9eff': i>=4?'rgba(76,158,255,0.5)':'rgba(255,107,107,0.5)'),
+        borderRadius:3, yAxisID:'y', order:2},
+      {type:'line', label:'YoY(%)', data:yoyArr, borderColor:'#f5a623',
+        backgroundColor:'transparent', borderWidth:2, pointRadius:4,
+        pointBackgroundColor:'#f5a623', tension:0.4, yAxisID:'y2', order:1, borderDash:[4,3]}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{
+        label:c=> c.datasetIndex===0 ? `${c.raw.toLocaleString()} MSI` : c.raw!==null?`YoY: ${c.raw>0?'+':''}${c.raw}%`:''
+      }}},
+      scales:{
+        x:{ticks:{color:gc.labelColor,font:{size:10},autoSkip:false,maxRotation:45},grid:{display:false}},
+        y:{ticks:{color:gc.labelColor,callback:v=>`${(v/1000).toFixed(1)}k`},grid:{color:gc.gridColor},min:2500,max:4000},
+        y2:{position:'right',ticks:{color:'#f5a623',callback:v=>`${v}%`},grid:{display:false},min:-20,max:25}
+      }
+    }
+  });
+}
+
+/* ── 가격 카드 ───────────────────────────────────────── */
+function renderPriceCards(pt) {
+  const container = document.getElementById('priceCards');
+  container.innerHTML = '';
+  for(const [key, prod] of Object.entries(pt.products)) {
+    const maxVal = Math.max(...prod.data.map(d=>d.value));
+    const bars = prod.data.map(d=>{
+      const pct = Math.round(d.value / maxVal * 100);
+      return `
+        <div class="pbar-row">
+          <div class="pbar-header"><span>${d.period}</span><span style="color:var(--text);font-weight:600">${d.value} ${prod.unit}</span></div>
+          <div class="pbar-bg"><div class="pbar-fill" style="width:${pct}%;background:${prod.color}"></div></div>
+        </div>`;
+    }).join('');
+    const first = prod.data[0].value, last = prod.data[prod.data.length-1].value;
+    const chgPct = Math.round((last-first)/first*100);
+    container.innerHTML += `
+      <div class="card">
+        <div class="card-title" style="color:${prod.color}">${prod.label}</div>
+        <div class="pbar-wrap">${bars}</div>
+        <div style="margin-top:8px"><span class="badge up">▲ +${chgPct}% (기간 내)</span></div>
+      </div>`;
+  }
+}
+
+init().catch(console.error);
+</script>
+</body>
+</html>
