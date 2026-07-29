@@ -1,40 +1,40 @@
 {
-  "_updated": "2026-07-28T01:28:58Z",
+  "_updated": "2026-07-29T01:29:10Z",
   "_note": "자동 수집 데이터 (GitHub Actions). 수동 데이터는 manual.json 참조",
   "stocks": {
     "005930.KS": {
       "name": "삼성전자",
       "currency": "KRW",
-      "price": 230500.0,
-      "change": -9.25
+      "price": 227500.0,
+      "change": 3.41
     },
     "000660.KS": {
       "name": "SK하이닉스",
       "currency": "KRW",
-      "price": 1620000.0,
-      "change": -10.79
+      "price": 1536000.0,
+      "change": -0.9
     },
     "MU": {
       "name": "Micron",
       "currency": "USD",
-      "price": 900.2,
-      "change": -2.25
+      "price": 820.53,
+      "change": -8.85
     },
     "5713.T": {
       "name": "Shin-Etsu",
       "currency": "JPY",
-      "price": 7373.0,
-      "change": -5.29
+      "price": 7187.0,
+      "change": -2.4
     },
     "6727.T": {
       "name": "SUMCO",
       "currency": "JPY",
-      "price": 778.0,
-      "change": -1.39
+      "price": 770.0,
+      "change": -0.9
     }
   },
   "fx": {
-    "USDKRW": 1470.04,
-    "USDJPY": 163.61
+    "USDKRW": 1454.96,
+    "USDJPY": 163.77
   }
 }
